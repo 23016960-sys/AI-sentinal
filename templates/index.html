@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Giám sát & Phát hiện Đăng nhập Bất thường - AI Sentinel</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+          
+    <!-- Custom Style CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon">🛡️</div>
+                <div class="logo-text">
+                    <h1>AI SENTINEL</h1>
+                    <span>SECURITY ENGINE</span>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" id="btn-tab-dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="#" class="nav-item" id="btn-tab-playground">
+                    <span class="icon">🧪</span> Playground
+                </a>
+                <a href="#" class="nav-item" id="btn-tab-settings">
+                    <span class="icon">⚙️</span> Cấu hình & Mô hình
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="dot pulse-green"></span>
+                    <span>ML Engine Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h2 id="current-tab-title">Trung tâm Giám sát Thời gian thực</h2>
+                    <p id="current-tab-subtitle">Đang theo dõi các luồng đăng nhập hệ thống</p>
+                </div>
+                
+                <!-- Quick Live Simulation Tools -->
+                <div class="simulator-panel">
+                    <label for="simulation-type">Mô phỏng:</label>
+                    <select id="simulation-type" class="custom-select">
+                        <option value="random">Ngẫu nhiên (Tự động)</option>
+                        <option value="none">Đăng nhập Bình thường</option>
+                        <option value="unusual_location">IP lạ / Quốc gia khác</option>
+                        <option value="unusual_time">Khung giờ bất thường</option>
+                        <option value="new_device">Thiết bị / OS lạ</option>
+                        <option value="brute_force">Tấn công Brute-force</option>
+                        <option value="impossible_travel">Di chuyển bất khả thi</option>
+                    </select>
+                    <button id="btn-simulate" class="btn btn-primary">
+                        <span class="btn-icon">⚡</span> Kích hoạt Đăng nhập
+                    </button>
+                </div>
+            </header>
+
+            <!-- TAB 1: DASHBOARD OVERVIEW -->
+            <section id="tab-dashboard" class="tab-content active">
+                
+                <!-- Stats Overview Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card" id="card-total-logins">
+                        <div class="stat-icon bg-blue">🔑</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Tổng lượt đăng nhập</span>
+                            <h3 class="stat-value" id="stat-total-logins">-</h3>
+                            <span class="stat-trend trend-neutral">Giám sát liên tục</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" id="card-anomalies">
+                        <div class="stat-icon bg-red">🚨</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Bất thường phát hiện</span>
+                            <h3 class="stat-value" id="stat-anomalies">-</h3>
+                            <span class="stat-trend trend-down" id="stat-anomaly-rate">-</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" id="card-risk-index">
+                        <div class="stat-icon bg-amber">⚡</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Chỉ số rủi ro hệ thống</span>
+                            <h3 class="stat-value" id="stat-risk-index">-</h3>
+                            <span class="stat-trend" id="stat-risk-level">-</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" id="card-devices">
+                        <div class="stat-icon bg-purple">💻</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Thiết bị tin cậy</span>
+                            <h3 class="stat-value" id="stat-devices">-</h3>
+                            <span class="stat-trend trend-up">Hồ sơ thiết bị đang học</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle Section: Map and Os Chart -->
+                <div class="dashboard-middle">
+                    <!-- Map Card -->
+                    <div class="card map-card">
+                        <div class="card-header">
+                            <h4>Bản đồ đe dọa địa lý (Geographic threat map)</h4>
+                            <span class="badge badge-info">Theo dõi 30 kết nối gần nhất</span>
+                        </div>
+                        <div class="card-body map-container-wrapper">
+                            <div id="threat-map"></div>
+                        </div>
+                    </div>
+
+                    <!-- OS Donut Chart -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h4>Cơ cấu Hệ điều hành</h4>
+                        </div>
+                        <div class="card-body chart-container-wrapper">
+                            <canvas id="os-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Section: Logs Table and Timeline Chart -->
+                <div class="dashboard-bottom">
+                    <!-- Logs List -->
+                    <div class="card logs-card">
+                        <div class="card-header">
+                            <h4>Nhật ký Đăng nhập Hệ thống</h4>
+                            <div class="table-actions">
+                                <span class="legend"><span class="dot dot-green"></span> Bình thường</span>
+                                <span class="legend"><span class="dot dot-amber"></span> Nghi ngờ</span>
+                                <span class="legend"><span class="dot dot-red"></span> Nguy hiểm</span>
+                            </div>
+                        </div>
+                        <div class="card-body table-responsive">
+                            <table class="custom-table" id="logs-table">
+                                <thead>
+                                    <tr>
+                                        <th>Thời gian</th>
+                                        <th>Tài khoản</th>
+                                        <th>IP đăng nhập</th>
+                                        <th>Vị trí</th>
+                                        <th>Hệ điều hành / Trình duyệt</th>
+                                        <th>Kết quả</th>
+                                        <th>Mức rủi ro</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logs-table-body">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">Đang tải dữ liệu lịch sử...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Activity Chart -->
+                    <div class="card activity-card">
+                        <div class="card-header">
+                            <h4>Xu hướng hoạt động</h4>
+                        </div>
+                        <div class="card-body chart-container-wrapper">
+                            <canvas id="activity-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: INTERACTIVE PLAYGROUND -->
+            <section id="tab-playground" class="tab-content">
+                <div class="playground-layout">
+                    <!-- Form Control Input -->
+                    <div class="card form-card">
+                        <div class="card-header">
+                            <h4>Giả lập Kiểm tra Login Event đơn lẻ</h4>
+                        </div>
+                        <div class="card-body">
+                            <form id="playground-form" class="playground-form">
+                                <div class="form-group">
+                                    <label for="play-user">Người dùng mẫu (Học máy sẽ tham chiếu hồ sơ này):</label>
+                                    <select id="play-user" class="form-control" required>
+                                        <option value="nguyen_van_a">nguyen_van_a (Mặc định: HN, Giờ HC, Windows/Chrome)</option>
+                                        <option value="tran_thi_b">tran_thi_b (Mặc định: HCM/Can Tho, Cả ngày, macOS/Safari/iOS)</option>
+                                        <option value="le_hoang_c">le_hoang_c (Mặc định: Da Nang, Đêm 20h-3h, Linux/Firefox)</option>
+                                        <option value="pham_minh_d">pham_minh_d (Mặc định: Can Tho/HCM, Sáng/Chiều, Windows/Edge)</option>
+                                        <option value="security_audit">security_audit (Mặc định: HN, Giờ HC, Windows/Chrome)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group col-6">
+                                        <label for="play-city">Thành phố đăng nhập:</label>
+                                        <select id="play-city" class="form-control">
+                                            <option value="Hanoi">Hà Nội (Việt Nam)</option>
+                                            <option value="Ho Chi Minh City">TP. Hồ Chí Minh (Việt Nam)</option>
+                                            <option value="Da Nang">Đà Nẵng (Việt Nam)</option>
+                                            <option value="Can Tho">Cần Thơ (Việt Nam)</option>
+                                            <option value="New York">New York (Mỹ)</option>
+                                            <option value="Moscow">Moscow (Nga)</option>
+                                            <option value="Tokyo">Tokyo (Nhật Bản)</option>
+                                            <option value="London">London (Anh)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="play-ip">IP Address (Để trống để tự động sinh theo Thành phố):</label>
+                                        <input type="text" id="play-ip" class="form-control" placeholder="Ví dụ: 113.190.45.12">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-6">
+                                        <label for="play-os">Hệ điều hành thiết bị:</label>
+                                        <select id="play-os" class="form-control">
+                                            <option value="Windows">Windows</option>
+                                            <option value="macOS">macOS</option>
+                                            <option value="Linux">Linux</option>
+                                            <option value="iOS">iOS (iPhone)</option>
+                                            <option value="Android">Android</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="play-browser">Trình duyệt:</label>
+                                        <select id="play-browser" class="form-control">
+                                            <option value="Chrome">Chrome</option>
+                                            <option value="Safari">Safari</option>
+                                            <option value="Firefox">Firefox</option>
+                                            <option value="Edge">Edge</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-6">
+                                        <label for="play-time">Giờ đăng nhập (Giả lập):</label>
+                                        <input type="time" id="play-time" class="form-control" value="10:00">
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="play-failures">Số lần đăng nhập sai liên tiếp trước đó:</label>
+                                        <input type="number" id="play-failures" class="form-control" min="0" value="0">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="play-status">Trạng thái lần đăng nhập hiện tại:</label>
+                                    <select id="play-status" class="form-control">
+                                        <option value="success">Thành công (Success)</option>
+                                        <option value="failed">Thất bại (Failed - Sai mật khẩu)</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn btn-success btn-block" id="btn-submit-playground">
+                                    🔬 Phân tích sự kiện bằng AI Engine
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Result Panel -->
+                    <div class="card result-card">
+                        <div class="card-header">
+                            <h4>Kết quả kiểm thử & Giải thích mô hình</h4>
+                        </div>
+                        <div class="card-body" id="playground-result-body">
+                            <div class="empty-result">
+                                <div class="empty-icon">🧬</div>
+                                <p>Điền thông tin và bấm nút "Phân tích sự kiện" ở bên trái để xem dự đoán từ mô hình học máy.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: CONFIG & MODEL SETTINGS -->
+            <section id="tab-settings" class="tab-content">
+                <div class="settings-layout">
+                    <!-- Rule Configurations -->
+                    <div class="card settings-card">
+                        <div class="card-header">
+                            <h4>Cấu hình Bộ máy Phân tích (Detection Policies)</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <div class="setting-control">
+                                    <label class="switch">
+                                        <input type="checkbox" id="setting-enable-ml" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="setting-text">
+                                        <h5>Kích hoạt Phân tích Học máy (Isolation Forest)</h5>
+                                        <p>Sử dụng mô hình học không giám sát để học thói quen người dùng và tính toán điểm số bất thường (Risk Score).</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <div class="setting-control">
+                                    <label class="switch">
+                                        <input type="checkbox" id="setting-enable-impossible-travel" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="setting-text">
+                                        <h5>Phát hiện Di chuyển Bất khả thi (Impossible Travel)</h5>
+                                        <p>Quy tắc chặn cứng: Tự động đánh dấu là Anomaly/Critical nếu khoảng cách lớn và vận tốc tính toán > 800 km/h.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <div class="setting-control">
+                                    <label class="switch">
+                                        <input type="checkbox" id="setting-enable-brute-force" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="setting-text">
+                                        <h5>Phát hiện Tấn công Brute-force</h5>
+                                        <p>Quy tắc chặn cứng: Chặn ngay lập tức nếu số lần đăng nhập lỗi liên tiếp vượt quá 5 lần.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="setting-item-range">
+                                <div class="range-header">
+                                    <h5>Ngưỡng nhạy cảm bất thường của Học Máy (ML Risk Threshold)</h5>
+                                    <span class="range-value" id="setting-ml-threshold-val">65</span>
+                                </div>
+                                <input type="range" id="setting-ml-threshold" min="30" max="90" value="65" class="custom-range">
+                                <p class="help-text">Điểm rủi ro (Risk Score) từ mô hình ML vượt qua ngưỡng này sẽ bị hệ thống đánh dấu là Bất thường (Anomaly). Ngưỡng thấp hơn tăng độ nhạy (bắt nhiều cảnh báo hơn), ngưỡng cao hơn giảm sai số dương (false alarm).</p>
+                            </div>
+
+                            <button id="btn-save-settings" class="btn btn-primary btn-block">💾 Lưu cấu hình chính sách</button>
+                        </div>
+                    </div>
+
+                    <!-- Model Manager -->
+                    <div class="card model-card">
+                        <div class="card-header">
+                            <h4>Quản lý Huấn luyện Mô hình Học máy</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="model-status-box">
+                                <div class="model-info-row">
+                                    <span class="label">Mô hình hiện tại:</span>
+                                    <span class="value val-highlight">Isolation Forest (150 Estimators)</span>
+                                </div>
+                                <div class="model-info-row">
+                                    <span class="label">Khuôn khổ Huấn luyện:</span>
+                                    <span class="value">scikit-learn v1.8+</span>
+                                </div>
+                                <div class="model-info-row">
+                                    <span class="label">Dữ liệu huấn luyện:</span>
+                                    <span class="value" id="model-data-size">3,000 dòng lịch sử</span>
+                                </div>
+                                <div class="model-info-row">
+                                    <span class="label">Độ chính xác mô hình:</span>
+                                    <span class="value text-success" id="model-accuracy">96.8%</span>
+                                </div>
+                            </div>
+
+                            <!-- Feature Importances -->
+                            <div class="feature-importance-section">
+                                <h5>Độ đóng góp của Đặc trưng (Feature Importance)</h5>
+                                <div id="feature-importance-bars">
+                                    <!-- Dynamic bars go here -->
+                                    <p class="text-muted">Đang tải biểu đồ đặc trưng...</p>
+                                </div>
+                            </div>
+
+                            <div class="training-control-box">
+                                <div class="form-group">
+                                    <label for="train-contamination">Tỷ lệ nhiễm bẩn giả định (Contamination - % Anomaly trong lịch sử):</label>
+                                    <select id="train-contamination" class="form-control">
+                                        <option value="0.01">1% (Dữ liệu lịch sử rất sạch)</option>
+                                        <option value="0.03" selected>3% (Mặc định - Đề xuất)</option>
+                                        <option value="0.05">5% (Chứa nhiều đăng nhập lạ sẵn)</option>
+                                        <option value="0.10">10% (Nhiễm bẩn cao)</option>
+                                    </select>
+                                </div>
+                                <button id="btn-retrain-model" class="btn btn-warning btn-block">
+                                    🔄 Huấn luyện lại Mô hình Học máy
+                                </button>
+                                <div id="train-loader" class="loader-wrapper hidden">
+                                    <div class="spinner"></div>
+                                    <span>Đang huấn luyện mô hình Isolation Forest trên dữ liệu lớn...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Right Slide-out Inspection Drawer -->
+        <div class="inspection-drawer" id="inspection-drawer">
+            <div class="drawer-header">
+                <h3>Chi tiết Kiểm tra Đăng nhập</h3>
+                <button class="btn-close-drawer" id="btn-close-drawer">✕</button>
+            </div>
+            <div class="drawer-body" id="drawer-content">
+                <!-- Dynamic Content Loaded Here -->
+            </div>
+        </div>
+        
+        <!-- Toast Notification -->
+        <div class="toast-notification" id="toast-notification">
+            <div class="toast-content">
+                <span class="toast-icon">⚡</span>
+                <span class="toast-message" id="toast-message">Đăng nhập mới được ghi nhận</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Leaflet.js from CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+            
+    <!-- Custom Application Logic JS -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

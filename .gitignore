@@ -1,0 +1,26 @@
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+.aws/
+.codex/
+
+# Runtime logs and editor files
+*.log
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Generated login history and trained models (regenerate locally)
+data/*.csv
+models/*.joblib
